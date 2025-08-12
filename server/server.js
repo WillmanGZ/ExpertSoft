@@ -152,6 +152,8 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
+//Invoices
+
 // Special endpoint to list pending invoices
 app.get("/invoices/with-delays", async (req, res) => {
   let connection;
@@ -168,6 +170,38 @@ app.get("/invoices/with-delays", async (req, res) => {
   } catch (err) {
     console.error("Error getting invoices:", err);
     res.status(500).json({ message: "Error getting invoices" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+//Transactions
+
+// Endpoint to list transactions filtered by platform (Nequi or Daviplata).
+app.get("/transactions/platforms/:name", async (req, res) => {
+  const { name } = req.params;
+
+  if (name.toLowerCase() != "nequi" && name.toLowerCase() != "daviplata") {
+    return res.status(404).json({ message: "Only nequi or daviplata" });
+  }
+
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT clients.name, transactions.transaction_number, invoices.invoice_number, invoices.platform FROM transactions INNER JOIN clients ON clients.client_id = transactions.client_id INNER JOIN invoices ON invoices.invoice_id = transactions.invoice_id WHERE platform = ? ORDER BY clients.name ASC;",
+      [name.toLowerCase()]
+    );
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ message: `There's no transactions made in ${name}` });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("Error getting transactions:", err);
+    res.status(500).json({ message: "Error getting transactions" });
   } finally {
     if (connection) connection.release();
   }

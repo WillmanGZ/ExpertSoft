@@ -93,7 +93,7 @@ The backend provides several advanced endpoints:
 
 - `/clients/total-paid/:id`: Returns the total paid by this client.
 - `/invoices/with-delays`: Lists of pending invoices.
-- `/transactions/platforms/:id`: Lists transactions filtered by platform (Nequi or Daviplata).
+- `/transactions/platforms/:name`: Lists transactions filtered by platform (Nequi or Daviplata).
 
 See the root endpoint (`/`) for a full list of available API routes.
 
