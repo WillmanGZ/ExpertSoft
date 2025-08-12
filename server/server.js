@@ -21,6 +21,114 @@ const bufferStream = stream.Readable;
 //List of data
 let results = [];
 
+// Endpoint to get all clients
+app.get("/clients", async (req, res) => {
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    const [result] = await connection.query("SELECT * FROM clients");
+    res.json(result);
+  } catch (err) {
+    console.error("Error getting clients:", err);
+    res.status(500).json({ message: "Error getting clients" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to get user by ID
+app.get("/clients/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT * FROM clients WHERE client_id = ?",
+      [id]
+    );
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.json(result[0]);
+  } catch (err) {
+    console.error("Error getting client:", err);
+    res.status(500).json({ message: "Error getting client" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to create client
+app.post("/clients", express.json(), async (req, res) => {
+  const { identity_number, name, address, phone, email } = req.body;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    await connection.query(
+      "INSERT INTO clients (identity_number, name, address, phone, email) VALUES (?)",
+      [[identity_number, name, address, phone, email]]
+    );
+    res.status(201).json({ message: "Client created successfully" });
+  } catch (err) {
+    console.error("Error creating client:", err);
+    res.status(500).json({ message: "Error creating client" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to update client
+app.put("/clients/:id", express.json(), async (req, res) => {
+  const { id } = req.params;
+  const { name, address, phone, email } = req.body;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    const [result] = await connection.query(
+      `UPDATE clients SET name = ?, address = ?, phone = ?, email = ? WHERE client_id = ${id}`,
+      [name, address, phone, email]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.json({ message: "Client updated successfully" });
+  } catch (err) {
+    console.error("Error updating client:", err);
+    res.status(500).json({ message: "Error updating client" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to delete client
+app.delete("/clients/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "DELETE FROM clients WHERE client_id = ?",
+      [id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.json({ message: "Client deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting client:", err);
+    res.status(500).json({ message: "Error deleting client" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 app.get("/transactions", async (req, res) => {
   let connection;
 

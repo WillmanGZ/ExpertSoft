@@ -13,38 +13,64 @@
       <button type="submit">Upload</button>
     </form>
     <div id="hidden" class="hidden">
-        <!-- Loans -->
-        <section>
-          <h2>Transactions</h2>
-          <section class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Id</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>State</th>
-                  <th>Type</th>
-                  <th>Client</th>
-                  <th>Identity Number</th>
-                  <th>Address</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Platform</th>
-                  <th>Invoice Number</th>
-                  <th>Billing Period</th>
-                  <th>Invoice Amount</th>
-                  <th>Paid Amount</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="transactionData">
-                <!-- Transaction data -->
-              </tbody>
-            </table>
-          </section>
+      <!--Clients-->
+      <section>
+        <h2>Clients</h2>
+        <button id="add-client-btn">Add User</button>
+        <section class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Identity Number</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="clientsTable">
+              <!-- Clients data -->
+            </tbody>
+          </table>
         </section>
-      </div>
+      </section>
+      <br />
+      <br />
+      <br />
+
+      <!-- Transactions -->
+      <section>
+        <h2>Transactions</h2>
+        <section class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>State</th>
+                <th>Type</th>
+                <th>Client</th>
+                <th>Identity Number</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Platform</th>
+                <th>Invoice Number</th>
+                <th>Billing Period</th>
+                <th>Invoice Amount</th>
+                <th>Paid Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionData">
+              <!-- Transaction data -->
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </div>
     <script type="module" src="/src/js/main.js"></script>
   </body>
 </html>
