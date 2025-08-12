@@ -38,6 +38,29 @@ app.get("/clients", async (req, res) => {
   }
 });
 
+//Special endpoint to the total paid by this client
+app.get("/clients/total-paid/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT clients.name, SUM(invoices.amount_paid) AS total_paid FROM clients INNER JOIN transactions ON transactions.client_id = clients.client_id INNER JOIN invoices ON invoices.invoice_id = transactions.invoice_id WHERE clients.client_id = ?;",
+      [id]
+    );
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    res.json(result[0]);
+  } catch (err) {
+    console.error("Error getting client:", err);
+    res.status(500).json({ message: "Error getting client" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 // Endpoint to get user by ID
 app.get("/clients/:id", async (req, res) => {
   const { id } = req.params;
