@@ -37,6 +37,81 @@ form.addEventListener("submit", async (ev) => {
   sendButton.disabled = true;
 });
 
+//Function to get all transaction data from DB
+async function getTransactionsData() {
+  try {
+    const req = await fetch("http://localhost:3000/transactions");
+    const data = await req.json();
+    transactionsData = data;
+
+    if (!req.ok) {
+      Toast.error("Error to fetch data");
+      return;
+    }
+
+    Toast.info("Wait a second, we are proccessing your data");
+  } catch (err) {
+    Toast.error("We couldn't get the info");
+    console.log("We couldn't get the info, error:", err);
+  }
+}
+
+//Function to send all loans data as CSV data to DB
+async function sendTransactionsData(file) {
+  // Make form info
+  const formData = new FormData();
+  formData.append("fileCSV", file);
+
+  try {
+    const req = await fetch("http://localhost:3000/transactions", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!req.ok) {
+      Toast.error("We couldn't process the file");
+      return;
+    }
+
+    Toast.info("Wait a second, we are proccessing your data");
+  } catch (err) {
+    Toast.error("We couldn't process the file");
+    console.log("We couldn't process the file, error:", err);
+  }
+}
+
+//Function to delete loan by id
+async function deleteTransaction(id) {
+  Swal.fire({
+    title: "Do you want to delete this transaction?",
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+    confirmButtonColor: "red",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const req = await fetch(`http://localhost:3000/transactions/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!req.ok) {
+          Toast.error("We couldn't delete that transaction, try later");
+          return;
+        }
+
+        transactionsData = transactionsData.filter(
+          (row) => row.id != id
+        );
+        Toast.success("Transaction deleted successfully");
+        renderTransactions();
+      } catch (err) {
+        Toast.error("We couldn't delete that transaction");
+        console.error("We couldn't delete that transaction", err);
+      }
+    }
+  });
+}
+
 //Function to render transactions
 function renderTransactions() {
   //Clean previous table data
@@ -65,7 +140,7 @@ function renderTransactions() {
               <td>${row["invoice_amount"]}</td>
               <td>${row["amount_paid"]}</td>
               <td><div>
-                  <button onclick="deleteLoan('${row["id_prestamo"]}')">Eliminar</button>
+                  <button onclick="deleteTransaction('${row["id"]}')">Eliminar</button>
               </div></td>
             </tr>
   `;
@@ -76,81 +151,6 @@ function renderTransactions() {
     Toast.error("Error to render transactions");
     console.error("Error to render transactions", err);
   }
-}
-
-//Function to send all loans data as CSV data to DB
-async function sendTransactionsData(file) {
-  // Make form info
-  const formData = new FormData();
-  formData.append("fileCSV", file);
-
-  try {
-    const req = await fetch("http://localhost:3000/transactions", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!req.ok) {
-      Toast.error("We couldn't process the file");
-      return;
-    }
-
-    Toast.info("Wait a second, we are proccessing your data");
-  } catch (err) {
-    Toast.error("We couldn't process the file");
-    console.log("We couldn't process the file, error:", err);
-  }
-}
-
-//Function to get all loans data from DB
-async function getTransactionsData() {
-  try {
-    const req = await fetch("http://localhost:3000/transactions");
-    const data = await req.json();
-    transactionsData = data;
-
-    if (!req.ok) {
-      Toast.error("Error to fetch data");
-      return;
-    }
-
-    Toast.info("Wait a second, we are proccessing your data");
-  } catch (err) {
-    Toast.error("We couldn't get the info");
-    console.log("We couldn't get the info, error:", err);
-  }
-}
-
-//Function to delete loan by id
-async function deleteTransaction(id) {
-  Swal.fire({
-    title: "Do you want to delete this transaction?",
-    showCancelButton: true,
-    confirmButtonText: "Delete",
-    confirmButtonColor: "red",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const req = await fetch(`http://localhost:3000/transactions/${id}`, {
-          method: "DELETE",
-        });
-
-        if (!req.ok) {
-          Toast.error("We couldn't delete that transaction, try later");
-          return;
-        }
-
-        transactionsData = transactionsData.filter(
-          (row) => row.trasaction_id != id
-        );
-        Toast.success("Transaction deleted successfully");
-        renderLoans();
-      } catch (err) {
-        Toast.error("We couldn't delete that transaction");
-        console.error("We couldn't delete that transaction", err);
-      }
-    }
-  });
 }
 
 window.deleteTransaction = deleteTransaction;

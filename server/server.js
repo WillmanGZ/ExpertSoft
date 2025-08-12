@@ -31,7 +31,7 @@ app.get("/transactions", async (req, res) => {
     try {
       //Try to get all transactions in DB
       const [transactions] = await connection.query(
-        "SELECT transactions.transaction_number AS transaction_id, transactions.date AS date, transactions.amount AS amount, transactions.state AS state, transactions.transaction_type AS transaction_type, clients.name AS client_name, clients.identity_number AS identity_number, clients.address AS address, clients.phone AS phone, clients.email AS email, invoices.platform AS platform, invoices.invoice_number AS invoice_number, invoices.billing_period as billing_period, invoices.invoice_amount as invoice_amount, invoices.amount_paid as amount_paid FROM transactions INNER JOIN clients ON clients.client_id = transactions.client_id INNER JOIN invoices ON invoices.invoice_id = transactions.invoice_id ORDER BY transaction_id ASC;"
+        "SELECT transactions.transaction_id AS id, transactions.transaction_number AS transaction_id, transactions.date AS date, transactions.amount AS amount, transactions.state AS state, transactions.transaction_type AS transaction_type, clients.name AS client_name, clients.identity_number AS identity_number, clients.address AS address, clients.phone AS phone, clients.email AS email, invoices.platform AS platform, invoices.invoice_number AS invoice_number, invoices.billing_period as billing_period, invoices.invoice_amount as invoice_amount, invoices.amount_paid as amount_paid FROM transactions INNER JOIN clients ON clients.client_id = transactions.client_id INNER JOIN invoices ON invoices.invoice_id = transactions.invoice_id ORDER BY transaction_id ASC;"
       );
       res.status(200).json(transactions);
     } catch (err) {
@@ -158,6 +158,36 @@ app.post("/transactions", upload.single("fileCSV"), async (req, res) => {
       message:
         "An error occurred while processing data. No changes have been saved",
     });
+  }
+});
+
+// Endpoint to delete transaction by id
+app.delete("/transactions/:id", async (req, res) => {
+  const transactionId = req.params.id;
+  let connection;
+
+  try {
+    // Get pool connection
+    connection = await pool.getConnection();
+
+    const [result] = await connection.query(
+      "DELETE FROM transactions WHERE transaction_id = ?",
+      [transactionId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    res.status(200).json({ message: "Transaction deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting transaction:", err.message);
+    res.status(500).json({
+      message:
+        "An error occurred while deleting the transaction. No changes have been made.",
+    });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
