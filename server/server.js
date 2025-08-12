@@ -152,6 +152,27 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
+// Special endpoint to list pending invoices
+app.get("/invoices/with-delays", async (req, res) => {
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT transactions.transaction_number, invoices.invoice_number, clients.name, transactions.state FROM transactions INNER JOIN invoices ON invoices.invoice_id = transactions.invoice_id INNER JOIN clients ON clients.client_id = transactions.client_id WHERE transactions.state = 'pending' ORDER BY transactions.transaction_number ASC;"
+    );
+    if (result.length === 0) {
+      return res.status(404).json({ message: "There's no invoices pending" });
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("Error getting invoices:", err);
+    res.status(500).json({ message: "Error getting invoices" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 app.get("/transactions", async (req, res) => {
   let connection;
 
