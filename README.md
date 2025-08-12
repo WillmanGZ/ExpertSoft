@@ -102,6 +102,7 @@ See the root endpoint (`/`) for a full list of available API routes.
 ## Relational Model Screenshot
 
 See [`docs/ExpertSoft DB.png`](docs/ExpertSoft DB.png ) for the relational model diagram.
+<img src="./docs/ExpertSoft DB.png">
 
 ---
 
