@@ -175,6 +175,94 @@ app.get("/invoices/with-delays", async (req, res) => {
   }
 });
 
+// Endpoint to get all invoices
+app.get("/invoices", async (req, res) => {
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    const [result] = await connection.query("SELECT * FROM invoices");
+    res.json(result);
+  } catch (err) {
+    console.error("Error getting invoices:", err);
+    res.status(500).json({ message: "Error getting invoices" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to get user by ID
+app.get("/invoices/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT * FROM invoices WHERE invoice_id = ?",
+      [id]
+    );
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+    res.json(result[0]);
+  } catch (err) {
+    console.error("Error getting invoice:", err);
+    res.status(500).json({ message: "Error getting invoice" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to update invoice
+app.put("/invoices/:id", express.json(), async (req, res) => {
+  const { id } = req.params;
+  const { invoice_amount, amount_paid } = req.body;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    const [result] = await connection.query(
+      `UPDATE invoices SET invoice_amount = ?, amount_paid = ? WHERE invoice_id = ${id}`,
+      [invoice_amount, amount_paid]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+    res.json({ message: "Invoice updated successfully" });
+  } catch (err) {
+    console.error("Error updating invoice:", err);
+    res.status(500).json({ message: "Error updating invoice" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Endpoint to delete invoice
+app.delete("/invoices/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "DELETE FROM invoices WHERE invoice_id = ?",
+      [id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+    res.json({ message: "Invoice deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting invoice:", err);
+    res.status(500).json({ message: "Error deleting invoice" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 //Transactions
 
 // Endpoint to list transactions filtered by platform (Nequi or Daviplata).

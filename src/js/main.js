@@ -8,6 +8,9 @@ const clientsTable = document.getElementById("clientsTable");
 const addClientBtn = document.getElementById("add-client-btn");
 let clientsData = [];
 
+const invoicesTable = document.getElementById("invoicesTable");
+let invoicesData = [];
+
 const transactionData = document.getElementById("transactionData");
 const sendButton = form.querySelector('button[type="submit"]');
 let transactionsData = [];
@@ -29,12 +32,14 @@ form.addEventListener("submit", async (ev) => {
   await sendTransactionsData(file);
 
   //Get all data
-  await getTransactionsData();
   await getClientsData();
+  await getInvoicesData();
+  await getTransactionsData();
 
   //Render all data in screen
-  renderTransactions();
+  renderInvoices();
   renderClients();
+  renderTransactions();
 
   //Make visible tables
   hiddenContainer.classList.remove("hidden");
@@ -179,7 +184,12 @@ async function editClient(id) {
     }),
   });
 
-  if (formValues) {
+  if (
+    formValues.name &&
+    formValues.address &&
+    formValues.email &&
+    formValues.phone
+  ) {
     const req = await fetch(`http://localhost:3000/clients/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -193,6 +203,8 @@ async function editClient(id) {
     Toast.success("Client edited successfully");
     await getClientsData();
     renderClients();
+  } else {
+    Toast.warning("You must fill all fields");
   }
 }
 
@@ -219,6 +231,127 @@ async function deleteClient(id) {
       } catch (err) {
         Toast.error("We couldn't delete that client");
         console.error("We couldn't delete that client", err);
+      }
+    }
+  });
+}
+
+//Invoices
+
+//Function to get all invoices data
+async function getInvoicesData() {
+  try {
+    const req = await fetch("http://localhost:3000/invoices");
+    invoicesData = await req.json();
+
+    if (!req.ok) {
+      Toast.error("Error to fetch invoices");
+      return;
+    }
+  } catch (err) {
+    Toast.error("We couldn't get the invoices");
+    console.error(err);
+  }
+}
+
+//Function to render invoices
+function renderInvoices() {
+  //Clean previous table data
+  invoicesTable.innerHTML = "";
+
+  try {
+    //Save clients data as html
+    let html = "";
+
+    invoicesData.forEach((invoice) => {
+      html += `
+      <tr>
+        <td>${invoice.invoice_number}</td>
+        <td>${invoice.platform}</td>
+        <td>${invoice.billing_period}</td>
+        <td>${invoice.invoice_amount}</td>
+        <td>${invoice.amount_paid}</td>
+        <td>
+          <button onclick="editInvoice('${invoice.invoice_id}')">Edit</button>
+          <button onclick="deleteInvoice('${invoice.invoice_id}')">Delete</button>
+        </td>
+      </tr>
+  `;
+    });
+
+    //Render all html in screen
+    invoicesTable.innerHTML += html;
+  } catch (err) {
+    Toast.error("Error to render invoices");
+    console.error("Error to render invoices", err);
+  }
+}
+
+//Function to edit invoice by id
+async function editInvoice(id) {
+  const invoice = invoicesData.find((invoice) => invoice.invoice_id == id);
+  if (!invoice) return;
+
+  const { value: formValues } = await Swal.fire({
+    title: "Edit Invoice",
+    html: `
+    <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+      <label for="swal-amount">invoice_amount</label>
+      <input id="swal-amount" type="number" class="swal2-input" value="${invoice.invoice_amount}">
+      <label for="swal-paid-amount">Amount Paid</label>
+      <input id="swal-paid-amount" type="number" class="swal2-input" value="${invoice.amount_paid}">
+    </div>
+    `,
+    preConfirm: () => ({
+      invoice_amount: document.getElementById("swal-amount").value,
+      amount_paid: document.getElementById("swal-paid-amount").value,
+    }),
+  });
+
+  if (formValues.invoice_amount && formValues.amount_paid) {
+    const req = await fetch(`http://localhost:3000/invoices/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formValues),
+    });
+
+    if (!req.ok) {
+      Toast.error("We couldn't edit that invoice, try again later");
+    }
+
+    Toast.success("Invoice edited successfully");
+    await getInvoicesData();
+    renderInvoices();
+  } else {
+    Toast.warning("You must fill all fields");
+  }
+}
+
+//Function to delete invoice by id
+async function deleteInvoice(id) {
+  Swal.fire({
+    title: "Do you want to delete this invoice?",
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+    confirmButtonColor: "red",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const req = await fetch(`http://localhost:3000/invoices/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!req.ok) {
+          Toast.error("We couldn't delete that invoice, try again later");
+        }
+        invoicesData = invoicesData.filter(
+          (invoice) => invoice.invoice_id != id
+        );
+        Toast.success("Invoice deleted successfully");
+        renderInvoices();
+      } catch (err) {
+        Toast.error("We couldn't delete that invoice");
+        console.error("We couldn't delete that invoice", err);
       }
     }
   });
@@ -342,4 +475,6 @@ function renderTransactions() {
 
 window.editUser = editClient;
 window.deleteUser = deleteClient;
+window.editInvoice = editInvoice;
+window.deleteInvoice = deleteInvoice;
 window.deleteTransaction = deleteTransaction;
