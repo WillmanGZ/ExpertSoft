@@ -324,6 +324,29 @@ app.get("/transactions", async (req, res) => {
   }
 });
 
+// Endpoint to get transaction by id
+app.get("/transactions/:id", async (req, res) => {
+  const { id } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+    const [result] = await connection.query(
+      "SELECT * FROM transactions WHERE transaction_id = ?",
+      [id]
+    );
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+    res.json(result[0]);
+  } catch (err) {
+    console.error("Error getting transaction:", err);
+    res.status(500).json({ message: "Error getting transaction" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 //Endpoint to upload CSV data
 app.post("/transactions", upload.single("fileCSV"), async (req, res) => {
   // Erase old data
